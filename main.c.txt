@@ -1,0 +1,36 @@
+#include <stdint.h>
+
+#include "freertos/Freertos.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+
+#include "multiplexer.h"
+
+int main() {
+
+Multiplexer multiplexer;
+
+//Configuração das GPIOs
+multiplexer.enable_gpio = 10;
+multiplexer.signal_gpio = 11;
+int s_gpios[4] = {12, 13, 14, 15};
+
+setMultiplexerS_GPIOS(&multiplexer, s_gpios);
+setMultiplexerState(&multiplexer, ENABLE);
+
+selectMultiplexerChannel(&multiplexer, 0);
+
+while(1) {
+	
+	writeMultiplexerSignal(&multiplexer, HIGH_SIG);
+	vTaskDelay(1000, portTICK_PERIOD_MS);
+
+	writeMultiplexerSignal(&multiplexer, LOW_SIG);
+	vTaskDelay(1000, portTICK_PERIOD_MS);
+
+}
+
+
+}
+
+

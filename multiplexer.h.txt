@@ -1,0 +1,84 @@
+#ifndef MULTIPLEXER
+#define MULTIPLEXER
+
+#include <stdint.h>
+#include <stdlib.h>
+#include "driver/gpio.h"
+
+typedef enum {
+
+	ENABLE,
+	DISABLE
+
+} MultiplexerState;
+
+typedef enum {
+	
+	LOW_SIG,
+	HIGH_SIG
+
+} MultiplexerSignal;
+
+typedef struct {
+
+	MultiplexerState state;
+	int enable_gpio;
+	
+	MultiplexerSignal signal;
+	int signal_gpio;
+	
+	int s_gpios[4];
+
+	uint8_t current_channel;
+	uint16_t channel_pattern;
+
+} Multiplexer;
+
+void setMultiplexerState(Multiplexer *multiplex, MultiplexerState new_state) {
+
+	multiplex->state = new_state;
+	gpio_set_level(multiplex->enable_gpio, multiplex->state);
+
+}
+
+void setMultiplexerS_GPIOS(Multiplexer *multiplex, int *s_gpios_array) {
+
+	memcpy(multiplex->s_gpios, s_gpios_array, sizeof(s_gpios_array));
+
+}
+
+void selectMultiplexerChannel(Multiplexer *multiplex, uint8_t new_channel) {
+
+	multiplex->current_channel = new_channel;
+	for(uint8_t i = 0; i < 4; i++)
+		gpio_set_level(s_gpios[i], (multiplex->current_channel >> i) & 1);
+
+}
+
+void writeMultiplexerSignal(Multiplexer *multiplex, MultiplexerSignal new_signal) {
+	
+	multiplex->signal = new_signal;
+	gpio_set_level(multiplex->signal_gpio, multiplex->signal);
+
+}
+
+void readMultiplexerSignal(Multiplexer *multiplex) {
+
+	multiplex->signal = gpio_get_level(multiplex->signal_gpio);
+	
+}
+
+void readMultiplexerChannelPattern(Multiplexer *multiplex) {
+
+	multiplex->channel_pattern = 0;
+
+	for(uint8_t i = 0; i < 16; i++) {
+		selectMultiplexerChannel(multiplex, i);
+		readMultiplexerSignal(multiplex);
+		multiplex->channel_pattern |= (multiplex->signal << i);
+	}
+}
+
+#endif
+
+
