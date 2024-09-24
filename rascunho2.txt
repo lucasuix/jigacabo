@@ -1,0 +1,190 @@
+#include <stdint.h>
+
+#define MOTOR_POWER_OUT 190 //PWM
+#define MOTOR_PIN_X 14
+#define MOTOR_PIN_Y 15
+
+uint8_t currentWindowPosition, desiredWindowPosition;
+uint16_t motor_action_time;
+uint16_t last_time;
+
+uint8_t motor_out[2] = {MOTOR_POWER_OUT, 0};
+
+uint8_t getBit(uint8_t bit, uint8_t value) {
+
+	return (value & (1 << bit)) >> bit;
+}
+
+void defineMotorRotation(uint8_t current_value, uint8_t desired_value, uint8_t *motor_out_arr) {
+
+	if(currentWindowValue > desiredWindowValue) //Anti clockwise
+	{
+		motor_out_arr[0] = 0;
+		motor_out_arr[1] = MOTOR_POWER_OUT;
+	}
+	else if (currentWindowValue < desiredWindowValue) //Clockwise
+	{
+		motor_out_arr[0] = MOTOR_POWER_OUT;
+		motor_out_arr[1] = 0;
+	}
+	else //Still
+	{
+		motor_out_arr[0] = 0;
+		motor_out_arr[1] = 0;
+	}
+}
+
+uint16_t getMotorActionDuration(uint8_t current_value, uint8_t desired_value) {
+
+
+	uint8_t range = abs(current_value - desired_value);
+
+	//Lógica do cálculo de quanto tempo o motor deve rodar
+
+	return duration + getTime();
+	
+}
+
+void setup() {
+
+	client.on('message', () => {
+		
+		//Recebeu mensagem no tópico de um movimento novo
+		defineMotorRotation(currentWindowPosition, desiredWindowPosition, motor_out);
+		motor_action_time = getMotorActionDuration(currentWindowPosition, desiredWindowPosition);
+
+		analogWrite(MOTOR_PIN_X, motor_out[0]);
+		analogWrite(MOTOR_PIN_Y, motor_out[1]);
+		
+	});
+}
+
+void loop() {
+
+	//Talvez vale a pena usar multitasking aqui
+	//O motor não depende de mais nada do resto do código para funcionar
+
+	if (currentWindowPosition != desiredWindowPosition) {
+		
+		if (getTime() >= motor_action_time) { //Desliga o motor quando passa o tempo determinado
+			analogWrite(MOTOR_PIN_X, 0);
+			analogWrite(MOTOR_PIN_Y, 0);
+		}
+		
+	}
+
+}
+
+//getTime() -> Retorna o tempo em ms interno do ESP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Richard acordou ao som de uma sinfonia caótica, o sabor amadeirado do estrondo o levava a crer que parte de sua casa, especificamente o telhado da cozinha, havia desmoronado.
+Não era surpresa, a casa era velha, mofada em alguns cantos e em outros se via a poluição do subúrbio de cupins que se instaurava aos poucos em partes da habitação.
+
+Ele procurou seus óculos, esfregou as remelas do olho e se pôs de pé empunhalando seu facão. Era velho, as rugas no seu rosto já desenhavam um novo retrato muito diferente de sua juventude, mas era robusto, forte e queria aproveitar sua aposentadoria em paz.
+
+A noite estava quente, insuportavelmente quente, mosquitos tocavam seus violinos agudos e irritantes pelo corredor e despertavam cada vez mais agitados enquanto Richard descia as escadas. Na metade, uma gota de suor deslizou sobre sua testa. Ele parou. Um bafo sinistro e abafado subiu em direção a suas narinas, um mosca pousou em cima do facão e ele jurou que as lâmpadas da casa iluminavam mais aqueles degrais antes de ir dormir.
+
+Ele fez a trindade com a mão, e com fé, desceu as escadas.
+A cena vista a fitar seus olhos na cozinha não podia ser reproduzida em pesadelos, em quadros, ou em qualquer outro estado alterado de consciência. A figura vermelha iluminada pela pálida luz da cozinha derramava sangue por toda a extensão do seu corpo. Não tinha pele mas o formato do corpo era indubitavelmente humano, estava de costas e parecia coçar seu rosto em agonia, moscas se alojavam e saboreavam seu corpo quente e fresco. Richard largou seu facão ao chão. Não conseguia mais estabelecer aquela ponte entre os músculos de seu corpo, seu cerébro e seus olhos.
+
+A criatura, parando de se coçar, se escondeu atrás de um balcão que atravessava a cozinha, manchando o lugar de sangue ainda mais. Sua voz áspera e grave, embargada como se chorasse a horas gritava em agonia: Suma. Suma. Suma!!!
+
+Richard, tomado por uma inspiração provavelmente divina, tomou novamente seu facão e bradou: 'Demônio que se instaurou nessa casa, na casa de um filho de Deus, eu vou mandar você de volta para o inferno.'
+
+Correu em direção ao balcão, o facão estava erguido pronto para arrancar a cabeça daquele demônio. Mas a cabeça foi a primeira coisa que Richard sentiu, em sua barriga, uma dor intensa e generalizada. Olhou para baixo enquanto o líquido que lhe dava a vida escorria de sua boca, e encarando o demônio abraçado ao seu corpo ajoelhado no chão entendeu porque coçava o rosto.
+
+Dentes, centenas de dentes nasciam de rosto, humanos, perfeitos. Todo seu crânio era uma arcada dentária e mordia com força a barriga de Richard. Os dois olhos sem pálpebras e pequenos fitaram o velho aposentado por alguns segundos, antes que Richard soltasse seu último suspiro.
+
