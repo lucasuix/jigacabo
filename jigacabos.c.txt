@@ -1,0 +1,233 @@
+#if defined (__USE_LPCOPEN)
+#if defined(NO_BOARD_LIB)
+#include <chip1.h>
+#else
+#include "board.h"
+#endif
+#endif
+
+#include <stdint.h>
+
+#include "ControleTeclado.h"
+#include "lcd.h"
+#include "teclado.h"
+#include "multiplexer.h"
+#include "telas.h"
+
+/ * ROTEIRO DE TESTES * /
+
+uint16_t testes[32][4] = {
+	//DEMUX, MUX, CANAL_DO_MUX, PATTERN DO DEMUX
+	{0, 1, 0, 0b1},
+	{0, 1, 1, 0b10},
+	{0, 1, 2, 0b100},
+	{0, 1, 3, 0b1000},
+	{0, 1, 4, 0b10000},
+	{0, 1, 5, 0b10100000},
+	{0, 1, 6, 0b1000000}
+};
+
+/ * VARIÁVEIS GLOBAIS * /
+TCtrlTeclado teclado_ihm;
+char comando;
+uint8_t mascara_erros[32];
+uint8_t cabos_erros[32];
+uint8_t n_erros;
+
+enum {
+	DEMUX,
+	MUX,
+	CANAL_MUX,
+	PATTERN_DEMUX
+};
+
+enum {
+	
+	CONTINUIDADE,
+	CURTO
+
+} Tipo;
+
+/* FUNÇÕES DE USO GERAL */
+
+uint16_t xor(uint16_t a, uint16_t b) {
+
+	return (a & !b) | (!a & b);	
+
+}
+
+/* FUNCOES DE TESTE DOS CABOS */
+
+//O teste de curto e de continuidade é o mesmo só muda a interpretação dos dados
+void testar() {
+
+	tela_atual = &tela_aguarde;
+	renderizarTela();
+	AguardarTempo(20);
+
+	uint16_t actual_pattern;
+	n_erros = 0;
+	
+	startMultiplexers();
+	
+	for(uint8_t i = 0; i < 32; i++) {
+		selectMultiplexerChannel(testes[i][MUX], testes[i][CANAL_MUX]);
+		actual_pattern = readMultiplexerChannelPattern(testes[i][DEMUX]);
+
+		if(actual_pattern != testes[i][PATTERN_DEMUX]) {
+			interpretarErro(testes[i][PATTERN_DEMUX], actual_pattern, xor(testes[i][PATTERN_DEMUX], actual_pattern), i)); //Já salvo o erro interpretado
+			n_erros++;
+		}
+	}
+
+	stopMultiplexers();
+
+	if(n_erros > 0) tela_atual = &tela_falha;
+	else tela_atual = &tela_sucesso;
+
+	renderizarTela();
+	AguardarTempo(2000);
+	
+}
+
+
+void registrarErro(uint8_t n_teste, uint8_t cabo, enum Tipo tipo_de_erro) {
+
+	mascara_erros[n_erros] = 0;
+	
+	//Adicionando qual o Mux
+	mascara_erros[n_erros] |= testes[n_teste][MUX];
+	mascara_erros[n_erros] <<= 2;
+	//Adicionando qual o Demux
+	mascara_erros[n_erros] |= testes[n_teste][DEMUX];
+
+	if (tipo_de_erro == CURTO) mascara_erros[n_erros] |= 16; // Flag no quinto bit de que é um erro de curto
+	//Como a flag do continuidade é um bit 0, então não precisa colocar a condição aqui pq ela já é a padrão
+	
+	cabos_erros[n_erros] = cabo;
+
+}
+
+//Interpreta o erro como curto ou continuidade e salva 
+void interpretar(uint16_t expected_pattern, uint16_t real_pattern, uint16_t xored_pattern, uint8_t teste) {
+
+	for(uint8_t cabo = 0; cabo < 16; cabo++) {
+		
+		if (xored_pattern & 1) {
+			if(expected_pattern & 1) { //Erro de continuidade
+				registrarErro(teste, cabo, CONTINUIDADE); 
+			}
+			else if (real_pattern & 1) { //Erro de curto
+				registrarErro(teste, cabo, CURTO);	
+			}
+		}
+
+		//Avança para o próximo bit
+		xored_pattern >>= 1;
+		expected_pattern >>= 1;
+		real_pattern >>= 1;
+	}
+}
+
+/* FUNÇÕES E TELA */
+
+void renderizarTelaDeErro() {
+
+	//Pode ser a tela de erros para curto, ou para continudiade, em qualquer um dos casos,
+	//eu só mudo a linha 2
+
+	tela_atual->linha2 = //String com os cabos
+	renderizarTela();
+	AguardarTempo(20);
+
+}
+
+void carregarTelasDeResultado() {
+
+	tela_atual = &tela_resultado_continuidade;
+	renderizarTela();
+	AguardarTempo(20);
+	
+}
+
+void trocarTelaDeErro() {
+
+	if(tela_atual == &tela_resultado_continuidade) tela_atual = &tela_resultado_curto;
+	else tela_atual = &tela_resultado_continuidade;
+	renderizarTelaDeErro();
+	AguardarTempo(20);
+
+}
+
+tela_resultado_continuidade.Seta_baixo = trocarTelaDeErro;
+tela_resultado_continuidade.Seta_cima = trocarTelaDeErro;
+tela_resultado_curto.Seta_baixo = trocarTelaDeErro;
+tela_resultado_curto.Seta_cima = trocarTelaDeErro;
+tela_falha.ok_func = carregarTelasDeErro;
+tela_teste.ok_func = testar;
+
+/* COMANDO */
+
+//Como durante o teste a IHM não lerá o teclado, isso aqui só
+//Importa quando o usuário estiver apto a tomar decisões
+void processaComando(char cmd) { //Processa um comando por vez
+
+	switch (cmd) {
+		case Ok:
+			tela_atual->ok_func();
+			break;
+		case Seta_baixo:
+			tela_atual->setabaixo_func();
+			break;
+		case Seta_cima:
+			tela_atual->setacima_func();
+			break;
+		case Esc:
+			tela_atual->esc_func();
+			break;
+	}
+}
+
+
+int main(void) {
+
+	SystemCoreClockUpdate();
+	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);
+
+	#if !defined(NO_BOARD_LIB)
+    	Board_Init();
+	#endif
+
+	/* INICIANDO GPIOS DOS MULTIPLEXERS -- Equivalente ao Pin_IHM_Init()*/
+	gpioMultiplexerInit();
+
+	/* -- TECLADO -- */
+	teclado_ihm.empresa = ControleReligador;
+	teclado_ihm.Teclado_Membrana = V3T;
+
+	/* -- TIMER -- */
+	init_timer1_MS(1);
+	enable_timer1();
+	
+	/* TELA */
+	LCD_BACK_ON; //Envia um sinal para acionar o BACKLIGHT DO LCD
+	AguardarTempo(20); //Aguarda 20 milissegundos
+
+	lcd_init(16);
+
+	tela_atual = &tela_teste;
+	renderizarTela();
+
+	AguardarTempo(2000);
+	
+	//PROGRAMA EM LOOP INFINITO
+	while (1) {
+		
+		fSweepingKeyboard(); //Detecta as teclas do Buffer do teclado
+
+		if(fBiosKey(1)) {//Verifica se tem alguma tecla apertada
+			comando = vProcTecla(fBiosKey(0), &teclado_ihm); //Envia a tecla para o teclado da ihm, e retorna qual o comando
+			processaComando(comando);
+		}
+	}	
+}

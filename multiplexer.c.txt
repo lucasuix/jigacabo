@@ -1,0 +1,123 @@
+#include <stdint.h>
+#include <stdlib.h>
+#include <chip1.h>
+
+void setMultiplexerState(Multiplexer *multiplex, MultiplexerState new_state) {
+
+	multiplex->state = new_state;
+	gpio_set_level(multiplex->enable_gpio, multiplex->state);
+
+}
+
+void setMultiplexerS_GPIOS(Multiplexer *multiplex, int *s_gpios_array) {
+
+	memcpy(multiplex->s_gpios, s_gpios_array, sizeof(s_gpios_array));
+
+}
+
+void selectMultiplexerChannel(Multiplexer *multiplex, uint8_t new_channel) {
+
+	multiplex->current_channel = new_channel;
+	for(uint8_t i = 0; i < 4; i++)
+		gpio_set_level(s_gpios[i], (multiplex->current_channel >> i) & 1);
+
+}
+
+void writeMultiplexerSignal(Multiplexer *multiplex, MultiplexerSignal new_signal) {
+	
+	multiplex->signal = new_signal;
+	gpio_set_level(multiplex->signal_gpio, multiplex->signal);
+
+}
+
+void readMultiplexerSignal(Multiplexer *multiplex) {
+
+	multiplex->signal = gpio_get_level(multiplex->signal_gpio);
+	
+}
+
+void readMultiplexerChannelPattern(Multiplexer *multiplex) {
+
+	multiplex->channel_pattern = 0;
+
+	for(uint8_t i = 0; i < 16; i++) {
+		selectMultiplexerChannel(multiplex, i);
+		readMultiplexerSignal(multiplex);
+		multiplex->channel_pattern |= (multiplex->signal << i);
+	}
+}
+
+/* CÓDIGO DO USUÁRIO AQUI */
+
+enum {
+	MUX_A1,
+	DEMUX_A2,
+	MUX_B1,
+	DEMUX_B2
+};
+
+//Todos ficam na mesma port, logo a gpio seria o
+//bitPosi
+
+multiplex[MUX_A1].enable_gpio = 0;
+multiplex[DEMUX_A2].enable_gpio = 1;
+multiplex[MUX_B1].enable_gpio = 2;
+multiplex[DEMUX_B2].enable_gpio = 3;
+
+multiplex[MUX_A1].signal_gpio = 4;
+multiplex[DEMUX_A2].signal_gpio = 5;
+multiplex[MUX_B1].signal_gpio = 6;
+multiplex[DEMUX_B2].signal_gpio = 7;
+
+int s_a1[4] = {8, 9, 10, 11};
+int s_a2[4] = {12, 13, 14, 15};
+int s_b1[4] = {16, 17, 18, 19};
+int s_b2[4] = {20, 21, 22, 23};
+
+setMultiplexerS_GPIOS(multiplex[MUX_A1], s_a1);
+setMultiplexerS_GPIOS(multiplex[DEMUX_A2], s_a2);
+setMultiplexerS_GPIOS(multiplex[MUX_B1], s_b1);
+setMultiplexerS_GPIOS(multiplex[DEMUX_B2], s_b2);
+
+void gpioMultiplexerInit() {
+
+	Chip_GPIO_Init(LPC_GPIO);
+	
+	for(uint8_t i = 0; i < 4; i++) {
+		Chip_GPIO_SetPinDIROutput(LPC_GPIO, 0, multiplex[i].enable_gpio);
+
+		for(uint8_t j = 0; j < 4; j++)
+			Chip_GPIO_SetPinDIROutput(LPC_GPIO, 0, multiplex[i].s_gpios[j]);
+	} 
+	
+	Chip_GPIO_SetPinDIROutput(LPC_GPIO, 0, multiplex[MUX_A1].signal_gpio);
+	Chip_GPIO_SetPinDIROutput(LPC_GPIO, 0, multiplex[MUX_B1].signal_gpio);
+	Chip_GPIO_SetPinDIRInput(LPC_GPIO,  0, multiplex[DEMUX_A2].signal_gpio);
+	Chip_GPIO_SetPinDIRInput(LPC_GPIO,  0, multiplex[DEMUX_B2].signal_gpio);
+
+}
+
+void startMultiplexers() {
+
+	setMultiplexerState(multiplex[MUX_A1], ENABLE);
+	setMultiplexerState(multiplex[DEMUX_A2], ENABLE);
+	setMultiplexerState(multiplex[MUX_B1], ENABLE);
+	setMultiplexerState(multiplex[DEMUX_B2], ENABLE);
+
+	writeMultiplexerSignal(multiplex[MUX_A1], HIGH_SIG);
+	writeMultiplexerSignal(multiplex[MUX_B1], HIGH_SIG);
+
+}
+
+
+void stopMultiplexers() {
+
+	setMultiplexerState(multiplex[MUX_A1], DISABLE);
+	setMultiplexerState(multiplex[DEMUX_A2], DISABLE);
+	setMultiplexerState(multiplex[MUX_B1], DISABLE);
+	setMultiplexerState(multiplex[DEMUX_B2], DISABLE);
+
+	writeMultiplexerSignal(multiplex[MUX_A1], LOW_SIG);
+	writeMultiplexerSignal(multiplex[MUX_B1], LOW_SIG);
+
+}

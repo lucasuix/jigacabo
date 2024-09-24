@@ -1,0 +1,29 @@
+#include "lcd.h"
+#include "telas.h"
+
+Tela tela_curto, tela_teste, tela_aguarde, tela_falha, tela_resultado_curto, tela_resultado_continuidade; //Telas possíveis
+Tela *tela_atual; //A tela que estou
+
+void renderizarTela() {
+
+	lcd_gotoxy(0, 0);
+	lcd_puts(tela_atual->linha_1);
+	lcd_gotoxy(0, 1);
+	lcd_puts(tela_atual->linha_2);
+
+}
+
+tela_teste.linha_1 = "INICIAR";
+tela_teste.linha_2 = "TESTES";
+
+tela_aguarde.linha_1 = "TESTE EM";
+tela_aguarde.linha_2 = "ANDAMENTO...";
+
+tela_sucesso.linha_1 = "SUCESSO";
+tela_sucesso.linha_2 = "NO TESTE!";
+
+tela_falha.linha_1 = "FALHA";
+tela_falha.linha_2 = "NO TESTE!";
+
+tela_resultado_curto.linha_1 = "CURTO EM:";
+tela_resultado_continuidade.linha_1 = "C. ABERTO EM:";

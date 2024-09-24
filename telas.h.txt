@@ -1,0 +1,19 @@
+#ifndef TELAS_H
+#define TELAS_H
+
+typedef struct {
+	unsigned char linha_1[16];
+	unsigned char linha_2[16];
+
+	void (*ok_func)(); //Ponteiro para a função específica de cada tela quando o usuário aperta ok
+	void (*setacima_func)();
+	void (*setabaixo_func)();
+	void (*esc_func)();
+} Tela;
+
+extern Tela tela_teste, tela_sucesso, tela_aguarde, tela_falha, tela_resultado_curto, tela_resultado_continuidade; //Telas possíveis
+extern Tela *tela_atual; //A tela que estou
+
+void renderizarTela(void);
+
+#endif
