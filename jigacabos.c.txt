@@ -19,7 +19,7 @@
 uint16_t testes[32][4] = {
 	//DEMUX, MUX, CANAL_DO_MUX, PATTERN DO DEMUX
 	{0, 1, 0, 0b1},
-	{0, 1, 1, 0b10},
+	{0, 1, 1, 0b10}, 
 	{0, 1, 2, 0b100},
 	{0, 1, 3, 0b1000},
 	{0, 1, 4, 0b10000},
@@ -55,6 +55,20 @@ uint16_t xor(uint16_t a, uint16_t b) {
 	return (a & !b) | (!a & b);	
 
 }
+
+void buildStringErros(unsigned char *stream) {
+	
+	uint8_t limit = 0;
+	
+	for(uint8_t i = 0; i < n_erros; i++) {
+		if (limit >= 16) break;
+		
+		
+	}
+
+	
+}
+
 
 /* FUNCOES DE TESTE DOS CABOS */
 
@@ -135,8 +149,9 @@ void renderizarTelaDeErro() {
 
 	//Pode ser a tela de erros para curto, ou para continudiade, em qualquer um dos casos,
 	//eu só mudo a linha 2
-
-	tela_atual->linha2 = //String com os cabos
+	
+	buildStringErros(tela_atual->linha2);
+	
 	renderizarTela();
 	AguardarTempo(20);
 
