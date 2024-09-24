@@ -1,0 +1,114 @@
+#define S0 13
+#define S1 15
+#define S2 18
+#define S3 19
+
+#define O0 26
+#define O1 27
+#define O2 28
+#define O3 29
+
+//Habilita comunicação com o CI
+#define ENABLE 11
+//Conectado a um botão para iniciar o programa
+#define START 33
+//Pino para leitura dos bits do MUX
+#define READ 31
+//Pino para escrita do sinal do DeMUX
+#define WRITE 32
+
+uint8_t i;
+uint8_t j;
+
+uint8_t getBit(uint8_t bit, uint8_t value) {
+
+return (value & (1 << bit)) >> bit;
+
+}
+
+void setup() {
+
+Serial.begin(115200);
+
+pinMode(S0,OUTPUT);
+pinMode(S1,OUTPUT);
+pinMode(S2,OUTPUT);
+pinMode(S3,OUTPUT);
+
+
+pinMode(O0,OUTPUT);
+pinMode(O1,OUTPUT);
+pinMode(O2,OUTPUT);
+pinMode(O3,OUTPUT);
+
+
+pinMode(ENABLE,OUTPUT);
+pinMode(START,INPUT);
+pinMode(WRITE,OUTPUT);
+pinMode(READ,INPUT);
+
+digitalWrite(WRITE, HIGH);
+digitalWrite(ENABLE, HIGH);
+
+}
+
+void loop() {
+
+if (digitalRead(START))
+{
+	digitalWrite(ENABLE, LOW);
+	delay(1000);
+	
+	//De 0 a 15 são 4 bits
+	//SO é o bit 0,
+	//S1 é o bit 1 e sucessivamente	
+	for (i = 0; i < 16 ; i++) {
+		
+		//Seleciona endereço e envia sinal
+		//Para o DEMUX
+		//O BIT específico é selecionado
+		//Para enviar para a saída
+		digitalWrite(S0, getBit(0, i));
+		digitalWrite(S1, getBit(1, i));
+		digitalWrite(S2, getBit(2, i));
+		digitalWrite(S3, getBit(3, i));
+
+		for (j = 0; j < 16; j++) {
+
+			digitalWrite(O0, getBit(0, j));
+			digitalWrite(O1, getBit(1, j));
+			digitalWrite(O2, getBit(2, j));
+			digitalWrite(O3, getBit(3, j));
+			
+			//Se um deles der contato e o valor
+			//de i ser diferente de j (conexões de cabo diferentes)
+			if(digitalRead(READ) && i != j) {
+				
+				//Printar que houve um curto
+				Serial.print("Curto entre cabo ");
+				Serial.print(i);
+				Serial.print("e cabo ");
+				Serial.println(j);
+				
+			}
+			
+			//Se o valor for igual e o READ não retornar 1
+			//significa que há um circuito aberto
+			if(i == j  && (!digitalRead(READ))) {
+
+				//Printar que aquele cabo está com circuito aberto
+				Serial.print("Circuito aberto no cabo ");
+				Serial.println(i);
+			}
+			
+		}
+
+	}
+	
+	//Desabilita a comunicação com o CI
+	digitalWrite(ENABLE, HIGH);
+
+}
+
+}
+
