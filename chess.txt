@@ -1,0 +1,92 @@
+/******************************************************************************
+
+                            Online C Compiler.
+                Code, Compile, Run and Debug C program online.
+Write your code in this editor and press "Run" button to compile and execute it.
+
+*******************************************************************************/
+
+#include <stdio.h>
+#include <stdint.h>
+
+typedef struct {
+    
+    uint8_t position;
+    char graphic;
+    //4 Bits - Y axis, 4 bits - X axis 
+    void (*move)(); //Ponteiro para uma função específica para cada peça
+    
+} Piece;
+
+typedef struct {
+    
+    uint8_t position;
+    char graphic;
+    uint8_t data_mask;
+    //2 bit which piece been promoted to,1 bit Promoted, 1 bit First Movement
+    void (*move)();
+    void (*attack)();
+    
+} Knight;
+
+//Black pieces
+Piece black_tower1, black_horse1, black_bishop1, black_queen;
+Piece black_king, black_bishop2, black_horse2, black_tower2;
+Knight black_knight1, black_knight2, black_knight3, black_knight4;
+Knight black_knight5, black_knight6, black_knight7, black_knight8;
+
+//White pieces
+Piece white_king, white_queen, white_horse1, white_horse2;
+Piece white_bishop1, white_bishop2, white_tower1, white_tower2;
+Knight white_knight1, white_knight2, white_knight3, white_knight4;
+Knight white_knight5, white_knight6, white_knight7, white_knight8;
+
+//Moving Functions
+void knight_movement(Knight *knight); //I i
+void king_movement(Piece *king); //K      k
+void queen_movement(Piece *queen); //Q    q
+void horse_movement(Piece *horse);  //H   h
+void bishop_movement(Piece *bishop); //B  b
+void tower_movement(Piece *tower); //T    t
+
+//No stack, o tamanho da primeira peça preta até
+//a outra nos diz o offset de qual jogador está
+//jogando (se são as peças pretas ou brancas)
+
+//Então todas as peças são sempre chamadas pelas
+//pretas
+//E se forem brancas é a preta em questão + len(peças pretas)
+//Assim eu alterno entre os jogadores
+
+Piece chessboard[8][8]; //Uma matrix para peças
+
+void render(void); //Renderiza o tabuleiro
+void init(void); //Inicia as estruturas
+
+int main()
+{
+
+    
+
+    return 0;
+}
+
+
+
+void init(void) {
+    
+    //Dependendo da ordem que eu disponho as peças
+    //no stack, posso iterar por elas mais facilmente
+    
+    void init(void) {
+    
+    //Dependendo da ordem que eu disponho as peças
+    //no stack, posso iterar por elas mais facilmente
+    
+    for(uint8_t *ip = (*uint8_t)&black_tower1; ip <= &black_tower2; ip = ip + sizeof(Piece)) {
+           
+    }
+    
+}
+    
+}
