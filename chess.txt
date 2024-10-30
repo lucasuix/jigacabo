@@ -1,92 +1,67 @@
 /******************************************************************************
 
-                            Online C Compiler.
-                Code, Compile, Run and Debug C program online.
-Write your code in this editor and press "Run" button to compile and execute it.
+Welcome to GDB Online.
+  GDB online is an online compiler and debugger tool for C, C++, Python, PHP, Ruby, 
+  C#, OCaml, VB, Perl, Swift, Prolog, Javascript, Pascal, COBOL, HTML, CSS, JS
+  Code, Compile, Run and Debug online from anywhere in world.
 
 *******************************************************************************/
-
 #include <stdio.h>
 #include <stdint.h>
 
-typedef struct {
-    
-    uint8_t position;
-    char graphic;
-    //4 Bits - Y axis, 4 bits - X axis 
-    void (*move)(); //Ponteiro para uma função específica para cada peça
-    
-} Piece;
+uint8_t board[64] = {0};
+uint8_t white_pieces[16] = {'T','H','B','Q','K','B','H','T',
+                            'P','P','P','P','P','P','P','P'};
+uint8_t black_pieces[16] = {'p','p','p','p','p','p','p','p',
+                            't','h','b','q','k','b','h','t'};
 
-typedef struct {
-    
-    uint8_t position;
-    char graphic;
-    uint8_t data_mask;
-    //2 bit which piece been promoted to,1 bit Promoted, 1 bit First Movement
-    void (*move)();
-    void (*attack)();
-    
-} Knight;
+uint8_t peca[2];          
+uint8_t comando[2];
 
-//Black pieces
-Piece black_tower1, black_horse1, black_bishop1, black_queen;
-Piece black_king, black_bishop2, black_horse2, black_tower2;
-Knight black_knight1, black_knight2, black_knight3, black_knight4;
-Knight black_knight5, black_knight6, black_knight7, black_knight8;
-
-//White pieces
-Piece white_king, white_queen, white_horse1, white_horse2;
-Piece white_bishop1, white_bishop2, white_tower1, white_tower2;
-Knight white_knight1, white_knight2, white_knight3, white_knight4;
-Knight white_knight5, white_knight6, white_knight7, white_knight8;
-
-//Moving Functions
-void knight_movement(Knight *knight); //I i
-void king_movement(Piece *king); //K      k
-void queen_movement(Piece *queen); //Q    q
-void horse_movement(Piece *horse);  //H   h
-void bishop_movement(Piece *bishop); //B  b
-void tower_movement(Piece *tower); //T    t
-
-//No stack, o tamanho da primeira peça preta até
-//a outra nos diz o offset de qual jogador está
-//jogando (se são as peças pretas ou brancas)
-
-//Então todas as peças são sempre chamadas pelas
-//pretas
-//E se forem brancas é a preta em questão + len(peças pretas)
-//Assim eu alterno entre os jogadores
-
-Piece chessboard[8][8]; //Uma matrix para peças
-
-void render(void); //Renderiza o tabuleiro
-void init(void); //Inicia as estruturas
+void render(void);
+void init(void);
+void eval(void);
+void move(void);
 
 int main()
 {
-
-    
-
+    init();
+    while(1) {
+        render();
+        eval();
+        move();
+    }
     return 0;
 }
 
-
-
-void init(void) {
+void render(void) {
     
-    //Dependendo da ordem que eu disponho as peças
-    //no stack, posso iterar por elas mais facilmente
-    
-    void init(void) {
-    
-    //Dependendo da ordem que eu disponho as peças
-    //no stack, posso iterar por elas mais facilmente
-    
-    for(uint8_t *ip = (*uint8_t)&black_tower1; ip <= &black_tower2; ip = ip + sizeof(Piece)) {
-           
+    for(uint8_t i = 1; i < 65; i++) {
+        if (!(board[i - 1])) printf("|  ");
+        else printf("| %c", board[i - 1]);
+        if (!(i % 8)) printf("|\n");
     }
     
 }
-    
+
+void init(void) {
+    for(uint8_t i = 0; i < 16; i++)  { 
+        board[i] = white_pieces[i];
+        board[i + 48] = black_pieces[i];
+    }
+}
+
+void eval(void) {
+    scanf("%s", peca);
+    peca[0] = peca[0] - 'a';
+    peca[1] = peca[1] - '1';
+    scanf("%s", comando);
+    comando[0] = comando[0] - 'a';
+    comando[1] = comando[1] - '1';
+}
+
+void move(void) {
+    uint8_t temp = board[(peca[0] + 56 - (peca[1] * 8))];
+    board[(peca[0] + 56 - (peca[1] * 8))] = board[(comando[0] + 56 - (comando[1] * 8))];
+    board[(comando[0] + 56 - (comando[1] * 8))] = temp;
 }
